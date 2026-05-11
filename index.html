@@ -257,10 +257,17 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        const API_KEY = 'pat_o5B9Dlt4c7FJC5kxFCA5s1mmvsGNBBZ3IEowDzJdObGtWFSomRCtpyhH9ia3BQas';
-        const BOT_ID = '7638522411621171234';
-        const API_URL = 'https://api.coze.cn/v3/chat';
+        // 从 config.js 读取配置，如果没有配置则使用本地开发模式
+        const BOT_ID = typeof CONFIG !== 'undefined' ? CONFIG.BOT_ID : '7638522411621171234';
+        let API_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://api.coze.cn/v3/chat';
+        
+        // 本地开发时直接使用 Coze API（注意：这会暴露 Key）
+        const USE_LOCAL_DEV = true; // 部署到 Cloudflare 后改为 false
+        if (USE_LOCAL_DEV) {
+            API_URL = 'https://api.coze.cn/v3/chat';
+        }
         
         let selectedEmotion = '';
         let selectedAnimal = '';
@@ -324,12 +331,20 @@
             };
 
             try {
+                // 构建请求头
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                // 本地开发时直接加 API Key（仅用于本地测试）
+                if (USE_LOCAL_DEV) {
+                    const API_KEY = 'pat_o5B9Dlt4c7FJC5kxFCA5s1mmvsGNBBZ3IEowDzJdObGtWFSomRCtpyhH9ia3BQas';
+                    headers['Authorization'] = `Bearer ${API_KEY}`;
+                }
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
+                    headers: headers,
                     body: JSON.stringify(requestBody)
                 });
 
