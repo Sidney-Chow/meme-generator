@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表情包生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #faf8f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #d32f2f;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .selector-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 12px;
+        }
+        
+        .option-btn {
+            padding: 8px 16px;
+            background: white;
+            color: #666;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .option-btn:hover {
+            background: #ffe0e0;
+            color: #d32f2f;
+        }
+        
+        .option-btn.active {
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+            color: white;
+        }
+        
+        .input-section {
+            margin-bottom: 20px;
+        }
+        
+        .input-wrapper {
+            background: #faf8f5;
+            border: 2px solid #ffe0b2;
+            border-radius: 12px;
+            padding: 15px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 50px;
+            padding: 12px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            resize: none;
+            font-size: 14px;
+            line-height: 1.5;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #d32f2f;
+        }
+        
+        textarea::placeholder {
+            color: #aaa;
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 15px;
+        }
+        
+        .generate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(211, 47, 47, 0.3);
+        }
+        
+        .generate-btn:disabled {
+            background: #e0e0e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .response-section {
+            margin-top: 20px;
+        }
+        
+        .response-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .response {
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+            background-color: #fafafa;
+            overflow: auto;
+        }
+        
+        .response img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #d32f2f;
+            font-size: 15px;
+            padding: 40px 0;
+        }
+        
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d32f2f;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #d32f2f;
+            padding: 15px;
+            background: #ffebee;
+            border-radius: 8px;
+        }
+        
+        .complete {
+            text-align: center;
+            color: #4caf50;
+            font-size: 14px;
+            margin-top: 15px;
+            padding: 8px;
+            background: #e8f5e9;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>表情包生成器</h1>
+        
+        <div class="selector-section">
+            <span class="section-label">选择情绪：</span>
+            <div class="btn-group" id="emotionGroup">
+                <button class="option-btn" data-emotion="奶糖">奶糖</button>
+                <button class="option-btn" data-emotion="傲娇">傲娇</button>
+                <button class="option-btn" data-emotion="酸了">酸了</button>
+                <button class="option-btn" data-emotion="抓狂">抓狂</button>
+                <button class="option-btn" data-emotion="温柔">温柔</button>
+                <button class="option-btn" data-emotion="喜欢">喜欢</button>
+                <button class="option-btn" data-emotion="伤心">伤心</button>
+                <button class="option-btn" data-emotion="生气">生气</button>
+                <button class="option-btn" data-emotion="暧昧">暧昧</button>
+                <button class="option-btn" data-emotion="困惑">困惑</button>
+            </div>
+        </div>
+        
+        <div class="selector-section">
+            <span class="section-label">选择动物：</span>
+            <div class="btn-group" id="animalGroup">
+                <button class="option-btn" data-animal="小鸟">小鸟</button>
+                <button class="option-btn" data-animal="狗狗">狗狗</button>
+                <button class="option-btn" data-animal="长颈鹿">长颈鹿</button>
+                <button class="option-btn" data-animal="大象">大象</button>
+                <button class="option-btn" data-animal="企鹅">企鹅</button>
+                <button class="option-btn" data-animal="鸭鸭">鸭鸭</button>
+                <button class="option-btn" data-animal="柯基">柯基</button>
+                <button class="option-btn" data-animal="布偶">布偶</button>
+                <button class="option-btn" data-animal="海豹">海豹</button>
+                <button class="option-btn" data-animal="兔子">兔子</button>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <div class="input-wrapper">
+                <textarea id="content" placeholder="选择情绪和动物后，提示词会自动生成..."></textarea>
+                <button class="generate-btn" id="sendBtn" onclick="sendRequest()">生成</button>
+            </div>
+        </div>
+        
+        <div class="response-section">
+            <div id="response" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'pat_o5B9Dlt4c7FJC5kxFCA5s1mmvsGNBBZ3IEowDzJdObGtWFSomRCtpyhH9ia3BQas';
+        const BOT_ID = '7638522411621171234';
+        const API_URL = 'https://api.coze.cn/v3/chat';
+        
+        let selectedEmotion = '';
+        let selectedAnimal = '';
+        const displayedUrls = new Set();
+        
+        document.querySelectorAll('#emotionGroup .option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#emotionGroup .option-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedEmotion = btn.dataset.emotion;
+                updatePrompt();
+            });
+        });
+        
+        document.querySelectorAll('#animalGroup .option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#animalGroup .option-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedAnimal = btn.dataset.animal;
+                updatePrompt();
+            });
+        });
+        
+        function updatePrompt() {
+            const textarea = document.getElementById('content');
+            if (selectedEmotion && selectedAnimal) {
+                textarea.value = `${selectedAnimal}，${selectedEmotion}的表情包，卡通风格`;
+            } else if (selectedEmotion) {
+                textarea.value = `${selectedEmotion}的表情包，卡通风格`;
+            } else if (selectedAnimal) {
+                textarea.value = `${selectedAnimal}表情包，卡通风格`;
+            }
+        }
+
+        async function sendRequest() {
+            const content = document.getElementById('content').value;
+            const responseDiv = document.getElementById('response');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (!content.trim()) {
+                alert('请先选择情绪和动物，或输入提示词！');
+                return;
+            }
+            
+            displayedUrls.clear();
+            responseDiv.innerHTML = '<div class="loading">正在生成表情包...</div>';
+            sendBtn.disabled = true;
+
+            const requestBody = {
+                bot_id: BOT_ID,
+                user_id: '123456789',
+                stream: true,
+                auto_save_history: true,
+                additional_messages: [
+                    {
+                        role: 'user',
+                        content: content,
+                        content_type: 'text'
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                responseDiv.innerHTML = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    processChunk(chunk, responseDiv);
+                }
+                
+                responseDiv.innerHTML += '<div class="complete">✨ 生成完成！</div>';
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="error">❌ 错误: ${error.message}</div>`;
+                console.error(error);
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        function processChunk(chunk, responseDiv) {
+            const lines = chunk.split('\n');
+            let currentEvent = '';
+            
+            for (const line of lines) {
+                if (line.startsWith('event:')) {
+                    currentEvent = line.slice(6).trim();
+                } else if (line.startsWith('data:')) {
+                    const data = line.slice(5).trim();
+                    if (data === '[DONE]') break;
+                    
+                    try {
+                        const json = JSON.parse(data);
+                        let content = '';
+                        
+                        if (currentEvent === 'conversation.message.delta' && json.content) {
+                            content = json.content;
+                        } else if (currentEvent === 'conversation.message.completed' && json.type === 'answer' && json.content) {
+                            content = json.content;
+                        }
+                        
+                        if (content) {
+                            const isFinishMessage = content.includes('generate_answer_finish') || 
+                                                  content.includes('msg_type') ||
+                                                  content.includes('finish_reason');
+                            
+                            if (!isFinishMessage) {
+                                const imageUrls = extractImageUrls(content);
+                                if (imageUrls.length > 0) {
+                                    imageUrls.forEach(url => {
+                                        if (!displayedUrls.has(url)) {
+                                            displayedUrls.add(url);
+                                            const imgContainer = document.createElement('div');
+                                            imgContainer.style.margin = '10px 0';
+                                            
+                                            const img = document.createElement('img');
+                                            img.src = url;
+                                            img.alt = '生成的表情包';
+                                            img.style.maxWidth = '100%';
+                                            img.style.borderRadius = '10px';
+                                            img.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                                            
+                                            img.onerror = function() {
+                                                imgContainer.innerHTML = `
+                                                    <div style="padding: 15px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #ff9800;">
+                                                        <p style="color: #e65100; margin-bottom: 5px;">图片加载失败</p>
+                                                        <p style="color: #757575; font-size: 14px; word-break: break-all;">${url}</p>
+                                                        <a href="${url}" target="_blank" rel="noopener" style="color: #1976d2; font-size: 14px; display: inline-block; margin-top: 10px;">点击在新窗口打开图片</a>
+                                                    </div>
+                                                `;
+                                            };
+                                            
+                                            imgContainer.appendChild(img);
+                                            responseDiv.appendChild(imgContainer);
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('解析错误:', e.message);
+                    }
+                }
+            }
+        }
+
+        function extractImageUrls(text) {
+            const urlRegex = /https?:\/\/[^\s,<>"]+/g;
+            const matches = text.match(urlRegex) || [];
+            return matches.filter(url => {
+                const imageExtensions = /\.(jpg|jpeg|png|gif|webp|svg|bmp)/i;
+                const cozeImageDomain = /^https?:\/\/s\.coze\.cn\//i;
+                const isWorkflowIcon = /workflow\.png/i.test(url);
+                return !isWorkflowIcon && (imageExtensions.test(url) || cozeImageDomain.test(url));
+            }).filter((url, index, self) => self.indexOf(url) === index);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
