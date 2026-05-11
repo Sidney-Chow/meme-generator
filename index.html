@@ -264,7 +264,7 @@
         let API_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://api.coze.cn/v3/chat';
         
         // 本地开发时直接使用 Coze API（注意：这会暴露 Key）
-        const USE_LOCAL_DEV = true; // 部署到 Cloudflare 后改为 false
+        const USE_LOCAL_DEV = false; // 部署到 Cloudflare 后改为 false
         if (USE_LOCAL_DEV) {
             API_URL = 'https://api.coze.cn/v3/chat';
         }
